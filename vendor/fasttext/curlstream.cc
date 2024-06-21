@@ -88,13 +88,20 @@ int CurlStreambuff::writer_callback(char *data, size_t size, size_t count, void*
 {
   auto self = static_cast<CurlStreambuff*>(ptr);
   auto bytes = size * count;
-  if(bytes > sizeof(m_buffer) || bytes == 0) {
-    return 0;
-  }
-  memcpy(&self->m_buffer[0], data, bytes);
-  self->m_size = bytes;
+
+  const size_t max_buffer_size = sizeof(self->m_buffer);  // Define maximum buffer size
+
+  // Ensure we do not exceed the buffer size
+  auto to_copy = std::min(bytes, max_buffer_size);
+
+  // Copy data into the buffer
+  memcpy(&self->m_buffer[0], data, to_copy);
+
+  // Update buffer size and position
+  self->m_size = to_copy;
   self->m_pos = 0;
-  return bytes;
+
+  return to_copy;
 }
 
 size_t CurlStreambuff::fillbuffer()
